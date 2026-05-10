@@ -105,6 +105,16 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/sw.js")
+def service_worker():
+    return app.send_static_file("sw.js")
+
+
+@app.route("/manifest.json")
+def manifest():
+    return app.send_static_file("manifest.json")
+
+
 @app.route("/api/tasks", methods=["GET"])
 def get_tasks():
     today = datetime.now().strftime("%Y-%m-%d")
