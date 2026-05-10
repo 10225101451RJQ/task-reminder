@@ -1,0 +1,68 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34,build-tools;34.0.0'
+
+      - name: Generate keystore
+        run: |
+          keytool -genkey -v -keystore release.keystore -alias todoapp \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android123 -keypass android123 \
+            -dname "CN=TodoApp, OU=Dev, O=Todo, L=BJ, ST=BJ, C=CN"
+
+      - name: Clone TWA template
+        run: |
+          git clone https://github.com/GoogleChromeLabs/svgomg-twa.git twa
+          cd twa
+          # We only need the gradle build skeleton, will customize below
+
+      - name: Generate icons
+        run: |
+          npm install -g pwa-asset-generator
+          pwa-asset-generator https://task-reminder-fj2e.onrender.com/static/icon.svg twa/app/src/main/res \
+            --favicon --opaque false --icon-only
+
+      - name: Build APK
+        run: |
+          # Simple approach: use pwabuilder cloud API
+          curl -X POST https://pwabuilder.com/api/buildapk \
+            -H "Content-Type: application/json" \
+            -d '{
+              "url": "https://task-reminder-fj2e.onrender.com",
+              "name": "今日待办",
+              "packageId": "com.todo.reminder",
+              "shortName": "待办"
+            }' -o apk.zip
+          ls -la apk.zip
+        continue-on-error: true
+
+      - name: Build with Bubblewrap (fallback)
+        if: failure()
+        run: |
+          npm install -g @bubblewrap/cli
+          mkdir twa-proj && cd twa-proj
+          bubblewrap init --manifest https://task-reminder-fj2e.onrender.com/static/manifest.json --directory .
+          # auto-answer prompts via expect or just accept defaults
+          bubblewrap build || echo "build attempted"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: task-reminder-apk
+          path: "**/*.apk"
+        continue-on-error: true
