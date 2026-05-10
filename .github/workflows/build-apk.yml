@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Signed APK
 
 on:
   workflow_dispatch:
@@ -16,53 +16,72 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-34,build-tools;34.0.0'
+          packages: 'platforms;android-35 build-tools;35.0.0'
 
-      - name: Generate keystore
+      - name: Generate Keystore
         run: |
-          keytool -genkey -v -keystore release.keystore -alias todoapp \
+          keytool -genkey -v \
+            -keystore release.keystore \
+            -alias todoapp \
             -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass android123 -keypass android123 \
-            -dname "CN=TodoApp, OU=Dev, O=Todo, L=BJ, ST=BJ, C=CN"
+            -storepass android123 \
+            -keypass android123 \
+            -dname "CN=Todo, OU=Dev, O=TodoApp, L=BJ, ST=BJ, C=CN"
 
-      - name: Clone TWA template
-        run: |
-          git clone https://github.com/GoogleChromeLabs/svgomg-twa.git twa
-          cd twa
-          # We only need the gradle build skeleton, will customize below
-
-      - name: Generate icons
-        run: |
-          npm install -g pwa-asset-generator
-          pwa-asset-generator https://task-reminder-fj2e.onrender.com/static/icon.svg twa/app/src/main/res \
-            --favicon --opaque false --icon-only
-
-      - name: Build APK
-        run: |
-          # Simple approach: use pwabuilder cloud API
-          curl -X POST https://pwabuilder.com/api/buildapk \
-            -H "Content-Type: application/json" \
-            -d '{
-              "url": "https://task-reminder-fj2e.onrender.com",
-              "name": "今日待办",
-              "packageId": "com.todo.reminder",
-              "shortName": "待办"
-            }' -o apk.zip
-          ls -la apk.zip
-        continue-on-error: true
-
-      - name: Build with Bubblewrap (fallback)
-        if: failure()
+      - name: Install and build with Bubblewrap
         run: |
           npm install -g @bubblewrap/cli
-          mkdir twa-proj && cd twa-proj
-          bubblewrap init --manifest https://task-reminder-fj2e.onrender.com/static/manifest.json --directory .
-          # auto-answer prompts via expect or just accept defaults
-          bubblewrap build || echo "build attempted"
+          # Create a temporary Node.js script to handle interactive init
+          cat > build-twa.mjs << 'EOF'
+          import { execSync } from 'child_process';
+          import { writeFileSync, mkdirSync } from 'fs';
 
-      - name: Upload APK
+          mkdirSync('twa', { recursive: true });
+
+          // Create twa-manifest.json directly (skip interactive init)
+          const twaManifest = {
+            packageId: "com.todo.reminder",
+            host: "task-reminder-fj2e.onrender.com",
+            name: "今日待办",
+            launcherName: "待办",
+            display: "standalone",
+            themeColor: "#1a1a2e",
+            backgroundColor: "#1a1a2e",
+            startUrl: "/?utm_source=homescreen",
+            webManifestUrl: "https://task-reminder-fj2e.onrender.com/static/manifest.json",
+            iconUrl: "https://task-reminder-fj2e.onrender.com/static/icon-512x512.png",
+            maskableIconUrl: "https://task-reminder-fj2e.onrender.com/static/maskable-512.png",
+            signingKey: {
+              path: "../release.keystore",
+              alias: "todoapp",
+              password: "android123"
+            },
+            splashScreenFadeOutDuration: 300,
+            enableNotifications: true,
+            shortcuts: [],
+            generatorApp: "bubblewrap-cli"
+          };
+
+          writeFileSync('twa/twa-manifest.json', JSON.stringify(twaManifest, null, 2));
+          console.log('twa-manifest.json created');
+
+          // Update project to use Android 35
+          const fs = await import('fs');
+          execSync('bubblewrap update --manifestUrl https://task-reminder-fj2e.onrender.com/static/manifest.json', { cwd: 'twa', stdio: 'inherit' });
+          EOF
+
+          node build-twa.mjs
+        continue-on-error: true
+
+      - name: Build APK with Bubblewrap
+        run: |
+          cd twa
+          bubblewrap build
+
+      - name: Find and Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: task-reminder-apk
-          path: "**/*.apk"
-        continue-on-error: true
+          name: task-reminder-signed-apk
+          path: |
+            twa/**/*.apk
+            twa/**/*.aab
