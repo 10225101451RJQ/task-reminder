@@ -1,0 +1,180 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+  padding: 24px 16px;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+#date-display {
+  font-size: 13px;
+  color: #888;
+}
+
+/* Form */
+#task-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+#task-form input {
+  background: #16213e;
+  border: 1px solid #2a2a4a;
+  color: #eee;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+#task-time {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+#task-title {
+  flex: 1;
+  min-width: 0;
+}
+
+#task-form input:focus {
+  outline: none;
+  border-color: #4a6cf7;
+}
+
+#task-form button {
+  background: #4a6cf7;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#task-form button:hover {
+  background: #3b5de7;
+}
+
+/* Task list */
+#task-list {
+  list-style: none;
+}
+
+.task-card {
+  background: #16213e;
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.task-card.reminding {
+  border-color: #f7a44a;
+  background: #2a1f10;
+  animation: flash 0.5s ease-in-out 3;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.task-card.done {
+  opacity: 0.45;
+}
+
+.task-card.done .task-title {
+  text-decoration: line-through;
+}
+
+.task-time-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a6cf7;
+  background: rgba(74, 108, 247, 0.15);
+  padding: 4px 8px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  min-width: 48px;
+  text-align: center;
+}
+
+.task-card.reminding .task-time-badge {
+  color: #f7a44a;
+  background: rgba(247, 164, 74, 0.2);
+}
+
+.task-title {
+  flex: 1;
+  font-size: 15px;
+  min-width: 0;
+}
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.task-actions button {
+  background: none;
+  border: 1px solid #2a2a4a;
+  color: #888;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.task-actions button:hover {
+  border-color: #4a6cf7;
+  color: #eee;
+}
+
+.task-actions .btn-done {
+  color: #4ade80;
+  border-color: #1a3a2a;
+}
+
+.task-actions .btn-del {
+  color: #f87171;
+  border-color: #3a1a1a;
+}
+
+.empty-state {
+  text-align: center;
+  color: #555;
+  padding: 40px 0;
+  font-size: 14px;
+}

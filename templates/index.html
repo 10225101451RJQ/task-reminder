@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="待办">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="icon" href="/static/icon.svg">
+<title>今日待办</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>今日待办</h1>
+    <span id="date-display"></span>
+  </header>
+
+  <form id="task-form">
+    <input type="time" id="task-time" required>
+    <input type="text" id="task-title" placeholder="做什么事？" required maxlength="60">
+    <button type="submit">添加</button>
+  </form>
+
+  <ul id="task-list"></ul>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/static/sw.js');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "今日待办",
+  "short_name": "待办",
+  "description": "日程提醒工具",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "icons": [{
+    "src": "/static/icon.svg",
+    "sizes": "any",
+    "type": "image/svg+xml",
+    "purpose": "any maskable"
+  }]
+}
